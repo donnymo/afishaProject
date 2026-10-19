@@ -4,7 +4,7 @@
 
 **Стек:** NestJS 12 · Prisma 7 · PostgreSQL 18 · React 19 · Vite · TanStack Query · React Router 7 · Tailwind 4 · shadcn/ui · Vitest
 
-(screens/main.jpeg)
+![Публичная афиша: фильтры по датам, категориям, городу и цене, карточки событий](screens/main.jpeg)
 
 ## Возможности
 
