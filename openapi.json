@@ -1,0 +1,1770 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "description": "Создаёт пользователя с ролью organizer и сразу выдаёт access token.",
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт состояния (INVALID_STATE_TRANSITION, EVENT_ALREADY_STARTED, EVENT_HIDDEN, EVENT_ARCHIVED, EMAIL_TAKEN)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много попыток, повторите позже (TOO_MANY_REQUESTS); время ожидания — в заголовке Retry-After",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Регистрация организатора",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Не больше 20 попыток в минуту с одного IP и 10 попыток за 15 минут на один email, иначе 429.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Слишком много попыток, повторите позже (TOO_MANY_REQUESTS); время ожидания — в заголовке Retry-After",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Вход по email и паролю",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Текущий пользователь по токену",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/categories": {
+      "get": {
+        "operationId": "CatalogController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Справочник категорий",
+        "tags": [
+          "Catalog"
+        ]
+      }
+    },
+    "/venues": {
+      "get": {
+        "operationId": "VenuesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VenueDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Список площадок",
+        "tags": [
+          "Venues"
+        ]
+      },
+      "post": {
+        "description": "Площадки общие: организатор добавляет новую, если её нет в справочнике.",
+        "operationId": "VenuesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVenueDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VenueDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Добавить площадку",
+        "tags": [
+          "Venues"
+        ]
+      }
+    },
+    "/venues/{id}": {
+      "get": {
+        "operationId": "VenuesController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VenueDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ресурс не найден или скрыт от вас (EVENT_NOT_FOUND, VENUE_NOT_FOUND, NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Площадка по id",
+        "tags": [
+          "Venues"
+        ]
+      }
+    },
+    "/events": {
+      "get": {
+        "description": "Только опубликованные и ещё не закончившиеся события. Фильтры комбинируются через AND, категории внутри фильтра — через OR. Неизвестные параметры и поле сортировки отклоняются с 400.",
+        "operationId": "EventsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 200,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Начало диапазона (ISO 8601). Дата без времени — начало дня по Москве. Попадают события, которые ещё идут в этот момент.",
+            "schema": {
+              "example": "2026-10-10",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Конец диапазона (ISO 8601). Дата без времени — конец дня по Москве.",
+            "schema": {
+              "example": "2026-10-11",
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Слаги категорий через запятую; подходит событие хотя бы с одной из них",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "moscow",
+              "type": "string"
+            }
+          },
+          {
+            "name": "minPrice",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "example": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "example": 1500,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "date",
+              "type": "string",
+              "enum": [
+                "date",
+                "price"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "asc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventPageDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Публичная афиша",
+        "tags": [
+          "Events"
+        ]
+      },
+      "post": {
+        "description": "Обязательно только название; остальное можно заполнить позже.",
+        "operationId": "EventsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Создать черновик",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/mine": {
+      "get": {
+        "description": "Все карточки текущего организатора, включая черновики, скрытые и архивные.",
+        "operationId": "EventsController_mine",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 200,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/EventStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventPageDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Мои события",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/mine/counts": {
+      "get": {
+        "description": "Для счётчиков на вкладках.",
+        "operationId": "EventsController_mineCounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyEventCountsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Сколько моих событий в каждом статусе",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/moderation/counts": {
+      "get": {
+        "description": "Для счётчиков на вкладках.",
+        "operationId": "EventsController_moderationCounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationCountsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Размер очереди модерации по статусам",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/moderation": {
+      "get": {
+        "description": "Опубликованные (по умолчанию) или скрытые события всех организаторов.",
+        "operationId": "EventsController_moderation",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 200,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "published",
+              "type": "string",
+              "enum": [
+                "published",
+                "hidden"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventPageDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Очередь модерации",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/{id}": {
+      "get": {
+        "description": "Публике — только актуальное опубликованное событие, иначе 404. Владелец и модератор видят карточку в любом статусе.",
+        "operationId": "EventsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ресурс не найден или скрыт от вас (EVENT_NOT_FOUND, VENUE_NOT_FOUND, NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Карточка события",
+        "tags": [
+          "Events"
+        ]
+      },
+      "patch": {
+        "description": "Статус так не меняется — для этого есть /publish и /hide. Поле status в теле даёт 400. Скрытое и архивное событие не изменяется (409).",
+        "operationId": "EventsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ресурс не найден или скрыт от вас (EVENT_NOT_FOUND, VENUE_NOT_FOUND, NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт состояния (INVALID_STATE_TRANSITION, EVENT_ALREADY_STARTED, EVENT_HIDDEN, EVENT_ARCHIVED, EMAIL_TAKEN)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Изменить поля своего события",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/{id}/publish": {
+      "post": {
+        "operationId": "EventsController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ресурс не найден или скрыт от вас (EVENT_NOT_FOUND, VENUE_NOT_FOUND, NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт состояния (INVALID_STATE_TRANSITION, EVENT_ALREADY_STARTED, EVENT_HIDDEN, EVENT_ARCHIVED, EMAIL_TAKEN)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Опубликовать черновик (draft → published)",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/events/{id}/hide": {
+      "post": {
+        "description": "Причина обязательна, её увидит владелец.",
+        "operationId": "EventsController_hide",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HideEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры, даты или фильтры (VALIDATION_FAILED, EVENT_NOT_READY)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Токен отсутствует, неверен или просрочен (UNAUTHORIZED, TOKEN_EXPIRED, INVALID_CREDENTIALS)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточная роль или чужой ресурс (FORBIDDEN_ROLE, FORBIDDEN_NOT_OWNER)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ресурс не найден или скрыт от вас (EVENT_NOT_FOUND, VENUE_NOT_FOUND, NOT_FOUND)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Конфликт состояния (INVALID_STATE_TRANSITION, EVENT_ALREADY_STARTED, EVENT_HIDDEN, EVENT_ARCHIVED, EMAIL_TAKEN)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Скрыть опубликованное событие (published → hidden)",
+        "tags": [
+          "Events"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Афиша Москвы API",
+    "description": "Публичная афиша, кабинет организатора и модерация.\n\n**Аутентификация.** POST /auth/login или /auth/register возвращают JWT access token. Передавайте его как `Authorization: Bearer <token>`.\n\n**Пагинация.** Offset: `page` (с 1) и `pageSize` (1–50). Ответ: `{ items, total, page, pageSize }`.\n\n**Ошибки.** Всегда `{ code, message, details, requestId }`: 400 — неверные параметры, 401 — нет или просрочен токен, 403 — не та роль или чужое событие, 404 — нет ресурса, 409 — конфликт состояния.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Студия «Резонанс»",
+            "description": "Название организации или имя"
+          },
+          "email": {
+            "type": "string",
+            "example": "studio@example.ru"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 200,
+            "example": "correct-horse-battery"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "organizer",
+          "moderator"
+        ]
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "role"
+        ]
+      },
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT access token, передаётся как Authorization: Bearer <token>"
+          },
+          "tokenType": {
+            "type": "string",
+            "example": "Bearer"
+          },
+          "expiresIn": {
+            "type": "number",
+            "example": 900,
+            "description": "Срок жизни токена в секундах"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "tokenType",
+          "expiresIn",
+          "user"
+        ]
+      },
+      "ErrorDetailDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "example": "venueId",
+            "description": "Поле запроса, к которому относится проблема"
+          },
+          "issue": {
+            "type": "string",
+            "example": "Не выбрана площадка"
+          }
+        },
+        "required": [
+          "issue"
+        ]
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_FAILED",
+              "EVENT_NOT_READY",
+              "BAD_REQUEST",
+              "UNAUTHORIZED",
+              "TOKEN_EXPIRED",
+              "INVALID_CREDENTIALS",
+              "FORBIDDEN_ROLE",
+              "FORBIDDEN_NOT_OWNER",
+              "NOT_FOUND",
+              "EVENT_NOT_FOUND",
+              "VENUE_NOT_FOUND",
+              "INVALID_STATE_TRANSITION",
+              "EVENT_ALREADY_STARTED",
+              "EVENT_HIDDEN",
+              "EVENT_ARCHIVED",
+              "EMAIL_TAKEN",
+              "CONFLICT",
+              "PAYLOAD_TOO_LARGE",
+              "TOO_MANY_REQUESTS",
+              "INTERNAL_ERROR"
+            ],
+            "example": "EVENT_NOT_READY"
+          },
+          "message": {
+            "type": "string",
+            "example": "Черновик нельзя опубликовать: заполните обязательные поля"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetailDto"
+            }
+          },
+          "requestId": {
+            "type": "string",
+            "example": "6f1c9a2e-3b7d-4c55-9a51-0e2f7c1d8b44",
+            "description": "Совпадает с заголовком X-Request-Id"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "details",
+          "requestId"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "organizer@afisha.local"
+          },
+          "password": {
+            "type": "string",
+            "example": "demo-pass-2026"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "CategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string",
+            "example": "concert",
+            "description": "Используется в фильтре GET /events?category="
+          },
+          "name": {
+            "type": "string",
+            "example": "Концерты"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name"
+        ]
+      },
+      "VenueDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "example": "Концертный зал «Северный»"
+          },
+          "address": {
+            "type": "string",
+            "example": "Новослободская ул., 24"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "address"
+        ]
+      },
+      "CreateVenueDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Клуб «Подвал»"
+          },
+          "address": {
+            "type": "string",
+            "example": "ул. Покровка, 3"
+          }
+        },
+        "required": [
+          "name",
+          "address"
+        ]
+      },
+      "EventStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "published",
+          "hidden",
+          "archived"
+        ]
+      },
+      "EventOwnerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "example": "Студия «Резонанс»"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "EventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "startsAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "price": {
+            "type": "number",
+            "nullable": true,
+            "description": "Рубли, 0 — бесплатно"
+          },
+          "ageLimit": {
+            "type": "number",
+            "nullable": true,
+            "enum": [
+              0,
+              6,
+              12,
+              16,
+              18
+            ]
+          },
+          "city": {
+            "type": "string",
+            "example": "moscow"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EventStatus"
+              }
+            ]
+          },
+          "venue": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VenueDto"
+              }
+            ]
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryDto"
+            }
+          },
+          "owner": {
+            "$ref": "#/components/schemas/EventOwnerDto"
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "hiddenReason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Только для владельца и модератора"
+          },
+          "hiddenAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "description": "Только для владельца и модератора"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "startsAt",
+          "endsAt",
+          "price",
+          "ageLimit",
+          "city",
+          "status",
+          "venue",
+          "categories",
+          "owner",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "EventPageDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 13,
+            "description": "Сколько записей подходит под фильтр всего"
+          },
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "example": 20
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ]
+      },
+      "MyEventCountsDto": {
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "number",
+            "example": 7
+          },
+          "draft": {
+            "type": "number",
+            "example": 2
+          },
+          "published": {
+            "type": "number",
+            "example": 3
+          },
+          "hidden": {
+            "type": "number",
+            "example": 1
+          },
+          "archived": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "all",
+          "draft",
+          "published",
+          "hidden",
+          "archived"
+        ]
+      },
+      "ModerationCountsDto": {
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "number",
+            "example": 12
+          },
+          "hidden": {
+            "type": "number",
+            "example": 2
+          }
+        },
+        "required": [
+          "published",
+          "hidden"
+        ]
+      },
+      "CreateEventDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Лекция о звукорежиссуре кино",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 5000
+          },
+          "startsAt": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time",
+            "example": "2026-11-02T19:00:00+03:00"
+          },
+          "endsAt": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time",
+            "example": "2026-11-02T21:00:00+03:00"
+          },
+          "price": {
+            "type": "object",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Рубли, 0 — бесплатно"
+          },
+          "ageLimit": {
+            "type": "number",
+            "nullable": true,
+            "enum": [
+              0,
+              6,
+              12,
+              16,
+              18
+            ]
+          },
+          "city": {
+            "type": "string",
+            "example": "moscow",
+            "default": "moscow"
+          },
+          "venueId": {
+            "type": "object",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "categoryIds": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "UpdateEventDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "object",
+            "nullable": true,
+            "maxLength": 5000
+          },
+          "startsAt": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time",
+            "example": "2026-11-02T19:00:00+03:00"
+          },
+          "endsAt": {
+            "type": "object",
+            "nullable": true,
+            "format": "date-time",
+            "example": "2026-11-02T21:00:00+03:00"
+          },
+          "price": {
+            "type": "object",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Рубли, 0 — бесплатно"
+          },
+          "ageLimit": {
+            "type": "number",
+            "nullable": true,
+            "enum": [
+              0,
+              6,
+              12,
+              16,
+              18
+            ]
+          },
+          "venueId": {
+            "type": "object",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "city": {
+            "type": "string",
+            "example": "moscow"
+          },
+          "categoryIds": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "HideEventDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 500,
+            "example": "Недостоверная цена: на площадке вход платный, в карточке — бесплатно."
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      }
+    }
+  }
+}

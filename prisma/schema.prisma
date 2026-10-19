@@ -1,0 +1,100 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../server/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// organizer ведёт свои события, moderator скрывает чужие.
+enum Role {
+  organizer
+  moderator
+}
+
+/// Переходы: draft → published (publish), published → hidden (hide),
+/// published → archived (фоновая задача, когда событие закончилось).
+enum EventStatus {
+  draft
+  published
+  hidden
+  archived
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  /// scrypt-хеш с солью, см. server/auth/password.ts
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(organizer)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  events       Event[] @relation("EventOwner")
+  hiddenEvents Event[] @relation("EventHiddenBy")
+
+  @@map("users")
+}
+
+model Venue {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  address   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  events Event[]
+
+  @@map("venues")
+}
+
+model Category {
+  id     String  @id @default(uuid()) @db.Uuid
+  slug   String  @unique
+  name   String
+  events Event[]
+
+  @@map("categories")
+}
+
+model Event {
+  id          String      @id @default(uuid()) @db.Uuid
+  title       String
+  /// Поля ниже могут быть пустыми у черновика; publish проверяет их заполненность.
+  description String?
+  startsAt    DateTime?   @map("starts_at")
+  endsAt      DateTime?   @map("ends_at")
+  /// Цена в рублях, 0 — бесплатно
+  price       Int?
+  ageLimit    Int?        @map("age_limit")
+  city        String
+  status      EventStatus @default(draft)
+
+  ownerId String @map("owner_id") @db.Uuid
+  owner   User   @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+
+  venueId String? @map("venue_id") @db.Uuid
+  venue   Venue?  @relation(fields: [venueId], references: [id], onDelete: Restrict)
+
+  categories Category[]
+
+  publishedAt  DateTime? @map("published_at")
+  hiddenAt     DateTime? @map("hidden_at")
+  hiddenReason String?   @map("hidden_reason")
+  hiddenById   String?   @map("hidden_by_id") @db.Uuid
+  hiddenBy     User?     @relation("EventHiddenBy", fields: [hiddenById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status, city, startsAt])
+  @@index([status, price])
+  @@index([ownerId, status])
+  /// Поиск закончившихся для архивации и фильтр «ещё не закончилось» в афише.
+  @@index([status, endsAt])
+  /// Вкладка «Скрытые» в модерации сортируется по времени скрытия.
+  @@index([status, hiddenAt])
+  @@map("events")
+}

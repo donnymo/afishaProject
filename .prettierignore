@@ -1,0 +1,6 @@
+node_modules
+dist
+server/generated
+prisma/migrations
+package-lock.json
+openapi.json
