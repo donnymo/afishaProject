@@ -16,24 +16,6 @@ Vercel - https://afisha-events-7jtyt45h9-donnymo.vercel.app/
 - JWT-аутентификация и роли `organizer` / `moderator`
 - Единый формат ошибок с `requestId` и OpenAPI-документация
 
-## Запуск
-
-Нужны Node.js 22+ и Docker.
-
-```bash
-npm install
-cp .env.example .env   # задать JWT_SECRET не короче 32 символов
-npm run db:up          # PostgreSQL в Docker на порту 5433
-npm run db:deploy      # миграции
-npm run db:seed        # демо-данные
-npm run dev            # API :3000, сайт :5173
-```
-
-- Сайт: http://localhost:5173
-- Swagger UI: http://localhost:3000/docs
-
-Демо-аккаунты: `organizer@afisha.local` и `moderator@afisha.local`, пароль `demo-pass-2026` (только для локальной разработки).
-
 ## API
 
 | Метод и путь                    | Доступ    | Назначение                                     |
@@ -61,17 +43,3 @@ npm run dev            # API :3000, сайт :5173
 - **Ошибки** любого вида приходят в одном формате: `{ code, message, details, requestId }`. `requestId` совпадает с заголовком `X-Request-Id`.
 - **Пароли** хранятся как scrypt-хеш с солью. Вход и регистрация ограничены по IP и по email (429).
 - **Архив**: закончившиеся события фоновая задача переводит из `published` в `archived`, чтобы выборки не росли с историей.
-
-
-Полное описание маршрутов — в Swagger UI и в `openapi.json`.
-
-## Скрипты
-
-| Команда             | Что делает                                      |
-| ------------------- | ----------------------------------------------- |
-| `npm run dev`       | API и фронтенд в режиме разработки              |
-| `npm run build`     | Сборка API (`dist/server`) и сайта (`dist/web`) |
-| `npm test`          | Unit- и интеграционные тесты                    |
-| `npm run test:unit` | Только unit-тесты, база не нужна                |
-| `npm run check`     | Проверка типов, линтер и форматирование         |
-| `npm run openapi`   | Обновить `openapi.json`                         |
